@@ -15,9 +15,12 @@ maintainers = [
 requires-python = ">=3.9"
 
 dependencies = [
+    "astropy",
+    "dask",
+    "healpy",
+    "matplotlib",
     "numpy",
     "pandas",
-    "dask",
 ]
 
 classifiers = [

@@ -17,7 +17,7 @@ from IPython.display import clear_output
 
 class TODError(BaseException): pass
 
-tod_cuts_base     = '/projects/ACT/yilung/depot/release_20211025/TODCuts' 
+tod_cuts_base     = '/projects/ACT/yilung/depot/release_20211025/TODCuts'
 tod_filepath_base = '/projects/ACT/managed/actpol_data'
 tod_offsets_base  = '/projects/ACT/mhasse/depots/shared/RelativeOffsets'
 
