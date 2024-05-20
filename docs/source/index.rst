@@ -10,7 +10,4 @@ todder Documentation
    :maxdepth: 2
 
    installation
-   usage
-   tutorials
    release-history
-   min_versions
