@@ -3,6 +3,8 @@ exclude =
     .git,
     __pycache__,
     todder/_version.py,
+    todder/instruments/*
+    todder/tests/*
     build,
     dist,
     docs/source/conf.py

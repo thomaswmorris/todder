@@ -1,15 +1,14 @@
 import numpy as np
 from astropy.io import fits
 
-from .. import site
 from todder.coords import Coordinates
+
+from .. import site
 from ..instrument.array import Detectors
 from . import TOD
 
 
-def load_atlast_tod(
-    fname: str, hdu: int = 1, band_center: int = 93, band_width: int = 52
-):
+def load_atlast_tod(fname: str, hdu: int = 1, band_center: int = 93, band_width: int = 52):
     f = fits.open(fname)
     raw = f[hdu].data
 

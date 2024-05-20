@@ -1,14 +1,11 @@
-from todder.sim import generate_noise_with_knee
-from todder.tod import TOD
-from todder.coords import Coordinates, dx_dy_to_phi_theta
-
 import numpy as np
 
-
+from todder.coords import Coordinates, dx_dy_to_phi_theta
+from todder.sim import generate_noise_with_knee
+from todder.tod import TOD
 
 
 def test_TOD():
-
     n = 256
 
     time = 1.75e9 + np.arange(0, 600, 0.1)

@@ -1,3 +1,2 @@
-from . import tod, coords, signal
-
-from .tod import TOD
+from . import coords, signal, tod  # noqa
+from .tod import TOD  # noqa

@@ -1,8 +1,9 @@
 import numpy as np
 from astropy.io import fits
 
-from .. import instrument, site
 from todder.coords import Coordinates
+
+from .. import instrument, site
 from . import TOD
 
 

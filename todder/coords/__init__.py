@@ -11,14 +11,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from scipy.interpolate import interp1d
 
-from .transforms import (get_center_phi_theta,
-                         dx_dy_to_phi_theta, 
-                         phi_theta_to_dx_dy, 
-                         xyz_to_phi_theta, 
-                         phi_theta_to_xyz)
+from .transforms import dx_dy_to_phi_theta, get_center_phi_theta, phi_theta_to_dx_dy, phi_theta_to_xyz, xyz_to_phi_theta
+
 
 def now():
     return ttime.time()
+
 
 frames = {
     "az_el": {
@@ -62,9 +60,7 @@ class Angle:
         elif units == "arcsec":
             self.a = (np.pi / 180 / 3600) * a
         else:
-            raise ValueError(
-                "'units' must be one of ['radians', 'degrees', 'arcmin', 'arcsec']"
-            )
+            raise ValueError("'units' must be one of ['radians', 'degrees', 'arcmin', 'arcsec']")
 
         self.is_scalar = len(np.shape(self.a)) == 0
 
@@ -124,33 +120,22 @@ class Coordinates:
         time_offset: float = 0,
         location: EarthLocation = None,
         frame: str = "ra_dec",
-        dtype = np.float32,
+        dtype=np.float32,
     ):
         if float(time.min()) != 0:
             time_offset = time.min()
             time -= time_offset
 
-        self.phi = np.atleast_1d(
-            (phi if isinstance(phi, da.Array) else da.from_array(phi))
-        ).astype(dtype)
-        self.theta = np.atleast_1d(
-            (theta if isinstance(theta, da.Array) else da.from_array(theta))
-        ).astype(dtype)
-        self.time = np.atleast_1d(
-            (time if isinstance(time, da.Array) else da.from_array(time))
-        ).astype(dtype)
+        self.phi = np.atleast_1d((phi if isinstance(phi, da.Array) else da.from_array(phi))).astype(dtype)
+        self.theta = np.atleast_1d((theta if isinstance(theta, da.Array) else da.from_array(theta))).astype(dtype)
+        self.time = np.atleast_1d((time if isinstance(time, da.Array) else da.from_array(time))).astype(dtype)
 
         self.timestep = np.median(np.gradient(self.time))
 
         if self.time.ndim > 1:
             raise ValueError("'time' can be at most one-dimensional.")
-        if (
-            len(self.time) != self.phi.shape[-1]
-            or len(self.time) != self.theta.shape[-1]
-        ):
-            raise ValueError(
-                "The size of the last dimensions of [phi, theta, time] must all match."
-            )
+        if len(self.time) != self.phi.shape[-1] or len(self.time) != self.theta.shape[-1]:
+            raise ValueError("The size of the last dimensions of [phi, theta, time] must all match.")
 
         *self.input_shape, self.time_shape = self.phi.shape
 
@@ -162,9 +147,7 @@ class Coordinates:
         if self.location is None:
             return
 
-        _center_phi, _center_theta = get_center_phi_theta(
-            self.phi, self.theta, keep_last_dim=True
-        )
+        _center_phi, _center_theta = get_center_phi_theta(self.phi, self.theta, keep_last_dim=True)
 
         # three fiducial offsets from the boresight to train a transformation matrix
         fid_offsets = np.radians([[-1.0, 0.0], [1.0, 0.0], [0.0, 1.0]])
@@ -174,9 +157,7 @@ class Coordinates:
             *fid_offsets.T, _center_phi[:, None], _center_theta[:, None]
         )
 
-        time_ordered_fid_points = phi_theta_to_xyz(
-            time_ordered_fid_phi, time_ordered_fid_theta
-        )
+        time_ordered_fid_points = phi_theta_to_xyz(time_ordered_fid_phi, time_ordered_fid_theta)
 
         # time_offset = _time.min().compute()
         # end_time = _time.max().compute()
@@ -184,9 +165,7 @@ class Coordinates:
 
         self.sampled_time = np.linspace(0, duration, int(np.maximum(2, duration / 1)))
 
-        self.sampled_fid_points = interp1d(self.time, time_ordered_fid_points, axis=0)(
-            self.sampled_time
-        )
+        self.sampled_fid_points = interp1d(self.time, time_ordered_fid_points, axis=0)(self.sampled_time)
         self.sampled_fid_points_inv = np.linalg.inv(self.sampled_fid_points)
         sampled_fid_phi, sampled_fid_theta = xyz_to_phi_theta(self.sampled_fid_points)
 
@@ -204,12 +183,10 @@ class Coordinates:
 
         # lazily compute all the coordinates
         for frame, config in frames.items():
-
             phi, theta = self.to_frame(frame=frame)
 
             setattr(self, config["phi"], phi)
             setattr(self, config["theta"], theta)
-
 
     def downsample(self, timestep: float = None, factor: int = None):
         if timestep is None and factor is None:
@@ -252,9 +229,7 @@ class Coordinates:
         boresight = self.boresight
         for attr in ["az", "el", "ra", "dec"]:
             for stat in ["min", "mean", "max"]:
-                summary.loc[
-                    attr, stat
-                ] = f"{float(np.degrees(getattr(getattr(boresight, attr), stat)().compute())):.03f}°"
+                summary.loc[attr, stat] = f"{float(np.degrees(getattr(getattr(boresight, attr), stat)().compute())):.03f}°"
 
         return summary
 
@@ -282,18 +257,10 @@ class Coordinates:
             raise ValueError("'frame' must be one of ['az_el', 'ra_dec', 'galactic']")
 
         # find a rotation matrix between the init frame and the new frame
-        sampled_fid_phi_new_frame = getattr(
-            sampled_fid_skycoords_new_frame, frames[frame]["astropy_phi"]
-        ).rad
-        sampled_fid_theta_new_frame = getattr(
-            sampled_fid_skycoords_new_frame, frames[frame]["astropy_theta"]
-        ).rad
-        sampled_fid_points_new_frame = phi_theta_to_xyz(
-            sampled_fid_phi_new_frame, sampled_fid_theta_new_frame
-        )
-        sampled_rotation_matrix = (
-            self.sampled_fid_points_inv @ sampled_fid_points_new_frame
-        ).swapaxes(-2, -1)
+        sampled_fid_phi_new_frame = getattr(sampled_fid_skycoords_new_frame, frames[frame]["astropy_phi"]).rad
+        sampled_fid_theta_new_frame = getattr(sampled_fid_skycoords_new_frame, frames[frame]["astropy_theta"]).rad
+        sampled_fid_points_new_frame = phi_theta_to_xyz(sampled_fid_phi_new_frame, sampled_fid_theta_new_frame)
+        sampled_rotation_matrix = (self.sampled_fid_points_inv @ sampled_fid_points_new_frame).swapaxes(-2, -1)
 
         # apply the matrix and convert to coordinates
         extra_dims = tuple(range(len(self.input_shape)))
@@ -301,12 +268,7 @@ class Coordinates:
             interp1d(self.sampled_time, sampled_rotation_matrix, axis=0)(self.time),
             axis=extra_dims,
         )
-        return xyz_to_phi_theta(
-            (
-                transform.astype(self.dtype)
-                @ np.expand_dims(self.compute_points(), axis=-1)
-            ).squeeze()
-        )
+        return xyz_to_phi_theta((transform.astype(self.dtype) @ np.expand_dims(self.compute_points(), axis=-1)).squeeze())
 
     def center(self, frame="ra_dec"):
         return get_center_phi_theta(*self.to_frame(frame=frame))
@@ -322,8 +284,6 @@ class Coordinates:
     @functools.cached_property
     def ra_dec(self):
         return self.to_frame(frame="ra_dec")
-
-
 
     @functools.cached_property
     def center_ra_dec(self):

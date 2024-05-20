@@ -9,6 +9,7 @@ from astropy.io import fits
 
 from .coords import Coordinates
 
+
 class TOD:
     """
     Time-ordered data. This has per-detector pointing and data.
@@ -22,7 +23,6 @@ class TOD:
         dets: pd.DataFrame = None,
         abscal: float = 1.0,
     ):
-
         self.coords = coords
         self.dets = dets
         self.components = components
@@ -33,12 +33,11 @@ class TOD:
         # sort them alphabetically
         self.components = {k: self.components[k] for k in self.fields}
 
-
     def __getattr__(self, attr):
         if attr in self.fields:
             return self.components[attr]
         raise AttributeError(f"No attribute named '{attr}'.")
-   
+
     def __repr__(self):
         return f"TOD(shape={self.shape}, fields={self.fields})"
 
@@ -159,10 +158,7 @@ class TOD:
 
     @property
     def azim_phase(self):
-        return np.pi * (
-            sp.signal.sawtooth(2 * np.pi * self.time / self.azim_scan_period, width=1)
-            + 1
-        )
+        return np.pi * (sp.signal.sawtooth(2 * np.pi * self.time / self.azim_scan_period, width=1) + 1)
 
     @property
     def turnarounds(self):
@@ -177,18 +173,10 @@ class TOD:
             splits_list = []
             for s, e in self.splits(target_split_time=None):
                 split_time = self.time[e] - self.time[s]  # total time in the split
-                n_splits = int(
-                    np.ceil(split_time / target_split_time)
-                )  # number of new splits
-                n_split_samples = int(
-                    target_split_time * fs
-                )  # number of samples per new split
-                for split_start in np.linspace(s, e - n_split_samples, n_splits).astype(
-                    int
-                ):
-                    splits_list.append(
-                        (split_start, np.minimum(split_start + n_split_samples, e))
-                    )
+                n_splits = int(np.ceil(split_time / target_split_time))  # number of new splits
+                n_split_samples = int(target_split_time * fs)  # number of samples per new split
+                for split_start in np.linspace(s, e - n_split_samples, n_splits).astype(int):
+                    splits_list.append((split_start, np.minimum(split_start + n_split_samples, e)))
             return splits_list
 
     def to_fits(self, fname, format="MUSTANG-2"):
@@ -209,9 +197,7 @@ class TOD:
             header["SITELONG"] = (self.lon, "Site Longitude")
             header["SITEELEV"] = (self.alt, "Site elevation (meters)")
 
-            col01 = fits.Column(
-                name="DX   ", format="E", array=self.coords.ra.flatten(), unit="radians"
-            )
+            col01 = fits.Column(name="DX   ", format="E", array=self.coords.ra.flatten(), unit="radians")
             col02 = fits.Column(
                 name="DY   ",
                 format="E",
@@ -228,9 +214,7 @@ class TOD:
             col05 = fits.Column(
                 name="TIME ",
                 format="E",
-                array=(
-                    (self.time - self.time[0]) * np.ones_like(self.coords.ra)
-                ).flatten(),
+                array=((self.time - self.time[0]) * np.ones_like(self.coords.ra)).flatten(),
                 unit="s",
             )
             col06 = fits.Column(name="COL  ", format="I")
@@ -239,13 +223,10 @@ class TOD:
                 name="PIXID",
                 format="I",
                 array=(
-                    np.arange(len(self.coords.ra), dtype=np.int16).reshape(-1, 1)
-                    * np.ones_like(self.coords.ra)
+                    np.arange(len(self.coords.ra), dtype=np.int16).reshape(-1, 1) * np.ones_like(self.coords.ra)
                 ).flatten(),
             )
-            col09 = fits.Column(
-                name="SCAN ", format="I", array=np.zeros_like(self.coords.ra).flatten()
-            )
+            col09 = fits.Column(name="SCAN ", format="I", array=np.zeros_like(self.coords.ra).flatten())
             col10 = fits.Column(name="ELEV ", format="E")
 
             hdu = fits.BinTableHDU.from_columns(
