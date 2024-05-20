@@ -33,20 +33,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Start MongoDB
-      #   uses: supercharge/mongodb-github-action@1.6.0
-
-      # - name: Start Sirepo Docker container
-      #   uses: NSLS-II/start-sirepo-action@v2
-      #   with:
-      #     docker-binary: docker
-
-      # - name: Copy databroker config file
-      #   run: |
-      #     set -vxeuo pipefail
-      #     mkdir -v -p ~/.config/databroker/
-      #     wget https://raw.githubusercontent.com/NSLS-II/sirepo-bluesky/main/examples/local.yml -O ~/.config/databroker/local.yml
-
       - name: Set up Python ${{ matrix.python-version }} with conda
         uses: conda-incubator/setup-miniconda@v2
         with:

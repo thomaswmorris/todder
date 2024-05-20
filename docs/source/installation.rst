@@ -11,17 +11,7 @@ To install the package using the ``pip`` package manager, run the following comm
 
 .. code:: bash
 
-   $ python3 -m pip install blop
-
-To install the package using the ``conda`` package manager, run the following command:
-
-.. code:: bash
-
-   $ conda install -c conda-forge blop
-
-If you'd like to use the Sirepo backend and ``sirepo-bluesky`` ophyd objects, please
-follow the `Sirepo/Sirepo-Bluesky installation & configuration instructions
-<https://nsls-ii.github.io/sirepo-bluesky/installation.html>`_.
+   $ python3 -m pip install todder
 
 
 Run tests
